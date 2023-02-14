@@ -42,7 +42,7 @@
                         <el-button type="danger" icon="el-icon-delete" size="mini" @click="removeUserById(scope.row.id)"></el-button>
                         <!-- 分配角色按钮 -->
                         <el-tooltip class="item" effect="dark" content="分配角色" placement="top-start" :enterable="false">
-                            <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+                            <el-button type="warning" icon="el-icon-setting" size="mini" @click="showRoleDialog(scope.row.username)"></el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -116,6 +116,29 @@
                 <el-button type="primary" @click="editUser">确 定</el-button>
             </span>
         </el-dialog>
+        <!-- 分配角色对话框 -->
+        <el-dialog
+            title="分配角色"
+            :visible.sync="roleDialogVisible"
+            width="50%"
+            @close="roleDialogClosed">
+            <!-- 内容主题区 -->
+            <el-form :model="roleForm" :rules="roleFormRules" ref="roleFormRef" label-width="70px">
+                <el-form-item label="用户名" prop="username">
+                    <el-input v-model="roleForm.username" disabled></el-input>
+                </el-form-item>
+                <el-form-item label="角色" prop="roleId">
+                    <el-select v-model="roleForm.roleId" placeholder="请选择角色" filterable>
+                        <el-option :label="role.name" :value="role.id" v-for="role in roleList" :key="role.id"></el-option>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <!-- 底部区域 -->
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="roleDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="updateUserRole">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 <script>
@@ -159,12 +182,17 @@ export default {
                 contact: [
                     { min: 11, max: 11, message: '手机号码为11位' }
                 ]
-            }
+            },
+            roleForm: {},
+            roleFormRules: {},
+            roleList: {},
+            roleDialogVisible: false
         }
     },
     created() {
         this.getUserList()
         this.depts()
+        this.getRoleList()
     },
     methods: {
         async getUserList() {
@@ -197,6 +225,9 @@ export default {
         },
         addDialogClosed() {
             this.$refs.addFormRef.resetFields()
+        },
+        roleDialogClosed() {
+            this.$refs.roleFormRef.resetFields()
         },
         addUser() {
             this.$refs.addFormRef.validate(async valid => {
@@ -256,6 +287,24 @@ export default {
             const {data: res} = await this.$http.get('http://localhost:9090/user/deleteById?id=' + id)
             if (!res.success) return this.$message('用户删除失败')
             this.$message.success('删除用户成功')
+            this.getUserList()
+        },
+        async getRoleList() {
+            const {data: res} = await this.$http.get('http://localhost:9090/role/roleList')
+            if (!res.success) return this.$message.error('获取角色列表失败')
+            this.roleList = res.obj
+        },
+        async showRoleDialog(username) {
+            const {data: res} = await this.$http.get('http://localhost:9090/user/selectUserRoleByUsername?username=' + username)
+            if (!res.success) return this.$message.error('查询失败')
+            this.roleForm = res.obj
+            this.roleDialogVisible = true
+        },
+        async updateUserRole() {
+            const {data: res} = await this.$http.post('http://localhost:9090/user/updateUserRole', this.roleForm)
+            if (!res.success) return this.$message.error('分配失败')
+            this.$message.success('修改成功')
+            this.roleDialogVisible = false
             this.getUserList()
         }
     }

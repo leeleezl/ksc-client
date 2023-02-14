@@ -4,7 +4,7 @@ import Login from '../components/Login.vue'
 import Home from '../components/Home.vue'
 import Welcome from '../components/Welcome.vue'
 import Users from '../components/user/Users.vue'
-import MenuAuth from '../components/power/MenuAuth.vue'
+import AuthList from '../components/power/AuthList.vue'
 import RoleAuth from '../components/power/RoleAuth.vue'
 
 Vue.use(Router)
@@ -28,7 +28,7 @@ const router = new Router({
       children: [
         { path: '/welcome', component: Welcome },
         { path: '/users', component: Users },
-        { path: '/menuAuth', component: MenuAuth },
+        { path: '/authList', component: AuthList },
         { path: '/roleAuth', component: RoleAuth }
       ]
     }
