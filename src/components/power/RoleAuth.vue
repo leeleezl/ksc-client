@@ -50,7 +50,7 @@
                         <el-button type="danger" icon="el-icon-delete" size="mini" @click="removeRoleById(scope.row.id)"></el-button>
                         <!-- 分配角色按钮 -->
                         <el-tooltip class="item" effect="dark" content="分配权限" placement="top-start" :enterable="false">
-                            <el-button type="warning" icon="el-icon-setting" size="mini" @click="showAuthDialog"></el-button>
+                            <el-button type="warning" icon="el-icon-setting" size="mini" @click="showAuthDialog(scope.row.id)"></el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -85,7 +85,7 @@
             title="修改角色"
             :visible.sync="editDialogVisible"
             width="50%" @close="editDialogClosed">
-            <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="70px">
+            <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="100px">
                 <el-form-item label="角色名" prop="name">
                     <el-input v-model="editForm.name"></el-input>
                 </el-form-item>
@@ -107,7 +107,7 @@
             :visible.sync="authDialogVisible"
             width="50%" @close="authDialogClosed">
             <!-- 树形控件 -->
-            <el-tree :data="authList" :props="treeProps" show-checkbox node-key="id" default-expand-all :default-checked-keys="defKeys"></el-tree>
+            <el-tree :data="authList" :props="treeProps" show-checkbox node-key="id" default-expand-all :default-checked-keys="defKeys" ref="treeRef"></el-tree>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="authDialogVisible = false">取 消</el-button>
                 <el-button type="primary" @click="setAuth">确 定</el-button>
@@ -156,7 +156,8 @@ export default {
                 children: 'children',
                 label: 'name'
             },
-            defKeys: []
+            defKeys: [],
+            roleId: ''
         }
     },
     created() {
@@ -243,16 +244,31 @@ export default {
             this.getRoleList()
         },
         authDialogClosed() {
-            this.$refs.authFormRef.reset()
+            this.defKeys = []
         },
-        async showAuthDialog() {
+        async showAuthDialog(id) {
+            this.roleId = id
             // 获取所有权限的数据
             const {data: res} = await this.$http.get('http://localhost:9090/sys/getAuthTree')
             if (!res.success) return this.$message.error('查询失败')
+            const {data: res1} = await this.$http.get('http://localhost:9090/sys/getThreeLevelAuth?roleId=' + id)
+            if (!res1.success) return this.$message.error('查询失败')
+            this.defKeys = res1.obj
             this.authList = res.obj
             this.authDialogVisible = true
         },
-        setAuth() {
+        async setAuth() {
+            const keys = [
+                ...this.$refs.treeRef.getCheckedKeys(),
+                ...this.$refs.treeRef.getHalfCheckedKeys()
+            ]
+            // console.log(keys)
+            const idStr = keys.join(',')
+            const {data: res} = await this.$http.post('http://localhost:9090/sys/setAuth', {roleId: this.roleId, authIds: idStr})
+            if (!res.success) return this.$message.error('分配失败')
+            this.$message.success('分配成功')
+            this.getRoleList()
+            this.authDialogVisible = false
         }
     }
 }
