@@ -119,6 +119,7 @@ export default {
             this.checkForm = res.obj
         },
         checkDialogClosed() {
+            this.$refs.checkFormRef.resetFields()
         },
         async checkKnowledgeNo() {
             this.checkForm.status = 0
