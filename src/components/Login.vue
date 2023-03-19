@@ -28,8 +28,8 @@ export default {
     data() {
         return {
             loginForm: {
-                username: 'aaaaaaa',
-                password: '123456'
+                username: '',
+                password: ''
             },
             loginFormRules: {
                 username: [
@@ -52,14 +52,18 @@ export default {
             this.$refs.loginFormRef.validate(async valid => {
                 // console.log(valid)
                 if (!valid) return
-                const {data: res} = await this.$http.post('http://localhost:9090/user/login', this.loginForm)
+                const {data: res} = await this.$http.post('/api/user/login', this.loginForm)
                 console.log(res)
                 if (!res.success) return this.$message.error('登录失败')
                 this.$message.success('登录成功')
                 // 1.将登陆成功后的token，保存到客户端的 sessionStorage
                 window.sessionStorage.setItem('token', res.msg)
                 // 2.通过编程式导航跳转到后台主页，路由地址是 /home
-                this.$router.push('/home')
+                if (res.obj.roleId === 103) {
+                    this.$router.push('/index')
+                } else {
+                    this.$router.push('/home')
+                }
             })
         }
     }

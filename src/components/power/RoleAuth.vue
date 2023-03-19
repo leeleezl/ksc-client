@@ -165,7 +165,7 @@ export default {
     },
     methods: {
         async getRoleList() {
-            const {data: res} = await this.$http.get('http://localhost:9090/role/roleList')
+            const {data: res} = await this.$http.get('/api/role/roleList')
             console.log(res)
             if (!res.success) return this.$message.error('角色列表获取失败')
             this.roleList = res.obj
@@ -183,7 +183,7 @@ export default {
                 return this.$message.info('已取消删除')
             }
             // 发送请求
-            const {data: res} = await this.$http.get('http://localhost:9090/sys/deleteAuth?id=' + id)
+            const {data: res} = await this.$http.get('/api/sys/deleteAuth?id=' + id)
             if (!res.success) return this.$message.error('删除权限失败')
             this.$message.success('删除成功')
             this.getRoleList()
@@ -191,7 +191,7 @@ export default {
         addRole() {
             this.$refs.addFormRef.validate(async valid => {
                 if (!valid) return
-                const {data: res} = await this.$http.post('http://localhost:9090/role/add', this.addForm)
+                const {data: res} = await this.$http.post('/api/role/add', this.addForm)
                 if (!res.success) {
                     this.$message.error('添加角色失败')
                 } else {
@@ -210,7 +210,7 @@ export default {
         },
         async showEditDialog(id) {
             console.log(id)
-            const {data: res} = await this.$http.get('http://localhost:9090/role/byId?id=' + id)
+            const {data: res} = await this.$http.get('/api/role/byId?id=' + id)
             if (!res.success) return this.$message.error('获取角色数据失败')
             // console.log(res)
             this.editForm = res.obj
@@ -219,7 +219,7 @@ export default {
         editRole() {
             this.$refs.editFormRef.validate(async valid => {
                 if (!valid) return
-                const {data: res} = await this.$http.post('http://localhost:9090/role/edit', this.editForm)
+                const {data: res} = await this.$http.post('/api/role/edit', this.editForm)
                 if (!res.success) return this.$message.error('修改失败')
                 this.editDialogVisible = false
                 this.getRoleList()
@@ -238,7 +238,7 @@ export default {
                 // 用户点击了取消
                 return this.$message.info('已取消删除')
             }
-            const {data: res} = await this.$http.get('http://localhost:9090/role/delete?id=' + id)
+            const {data: res} = await this.$http.get('/api/role/delete?id=' + id)
             if (!res.success) return this.$message('角色删除失败')
             this.$message.success('删除用户成功')
             this.getRoleList()
@@ -249,9 +249,9 @@ export default {
         async showAuthDialog(id) {
             this.roleId = id
             // 获取所有权限的数据
-            const {data: res} = await this.$http.get('http://localhost:9090/sys/getAuthTree')
+            const {data: res} = await this.$http.get('/api/sys/getAuthTree')
             if (!res.success) return this.$message.error('查询失败')
-            const {data: res1} = await this.$http.get('http://localhost:9090/sys/getThreeLevelAuth?roleId=' + id)
+            const {data: res1} = await this.$http.get('/api/sys/getThreeLevelAuth?roleId=' + id)
             if (!res1.success) return this.$message.error('查询失败')
             this.defKeys = res1.obj
             this.authList = res.obj
@@ -264,7 +264,7 @@ export default {
             ]
             // console.log(keys)
             const idStr = keys.join(',')
-            const {data: res} = await this.$http.post('http://localhost:9090/sys/setAuth', {roleId: this.roleId, authIds: idStr})
+            const {data: res} = await this.$http.post('/api/sys/setAuth', {roleId: this.roleId, authIds: idStr})
             if (!res.success) return this.$message.error('分配失败')
             this.$message.success('分配成功')
             this.getRoleList()

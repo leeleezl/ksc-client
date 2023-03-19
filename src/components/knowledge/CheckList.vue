@@ -93,7 +93,7 @@ export default {
     },
     methods: {
         async getCheckList() {
-            const {data: res} = await this.$http.post('http://localhost:9090/knowledge/checkList', this.queryInfo)
+            const {data: res} = await this.$http.post('/api/knowledge/checkList', this.queryInfo)
             // console.log(res)
             if (!res.success) return this.$message.error('查询失败')
             this.checkList = res.obj.list
@@ -114,7 +114,7 @@ export default {
         async showCheckDialog(id) {
             this.checkDialogVisible = true
             // console.log(id)
-            const {data: res} = await this.$http.get('http://localhost:9090/knowledge/selectById?id=' + id)
+            const {data: res} = await this.$http.get('/api/knowledge/selectById?id=' + id)
             if (!res.success) return this.$message.error('查询失败')
             this.checkForm = res.obj
         },
@@ -123,7 +123,7 @@ export default {
         },
         async checkKnowledgeNo() {
             this.checkForm.status = 0
-            const {data: res} = await this.$http.post('http://localhost:9090/knowledge/check', this.checkForm)
+            const {data: res} = await this.$http.post('/api/knowledge/check', this.checkForm)
             if (!res.success) return this.$message.error('审核失败')
             this.$message.success('审核成功')
             this.checkDialogVisible = false
@@ -131,7 +131,7 @@ export default {
         },
         async checkKnowledgeOk() {
             this.checkForm.status = 3
-            const {data: res} = await this.$http.post('http://localhost:9090/knowledge/check', this.checkForm)
+            const {data: res} = await this.$http.post('/api/knowledge/check', this.checkForm)
             if (!res.success) return this.$message.error('审核失败')
             this.$message.success('审核成功')
             this.checkDialogVisible = false

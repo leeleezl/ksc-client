@@ -34,7 +34,7 @@ export default {
     },
     methods: {
         async getMenus() {
-            const {data: res} = await this.$http.get('http://localhost:9090/sys/menuList')
+            const {data: res} = await this.$http.get('/api/sys/menuList')
             if (!res.success) return this.$message.error('菜单数据获取失败')
             this.menus = res.obj
         }

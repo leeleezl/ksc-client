@@ -196,7 +196,7 @@ export default {
     },
     methods: {
         async getUserList() {
-           const {data: res} = await this.$http.get('http://localhost:9090/user/users', { params: this.queryInfo })
+           const {data: res} = await this.$http.get('/api/user/users', { params: this.queryInfo })
            // console.log(res)
            if (!res.success) return this.$message(res.msg)
            this.userList = res.obj.list
@@ -216,7 +216,7 @@ export default {
         },
         async userStateChanged(userinfo) {
             // console.log(userinfo)
-            const {data: res} = await this.$http.post('http://localhost:9090/user/status', userinfo)
+            const {data: res} = await this.$http.post('/api/user/status', userinfo)
             if (!res.success) {
                 userinfo.state = !userinfo.state
                 return this.$message.error('更改用户状态失败')
@@ -232,7 +232,7 @@ export default {
         addUser() {
             this.$refs.addFormRef.validate(async valid => {
                 if (!valid) return
-                const {data: res} = await this.$http.post('http://localhost:9090/user/addUser', this.addForm)
+                const {data: res} = await this.$http.post('/api/user/addUser', this.addForm)
                 if (!res.success) {
                     this.$message.error('添加用户失败')
                 } else {
@@ -246,14 +246,14 @@ export default {
             })
         },
         async depts() {
-           const {data: res} = await this.$http.get('http://localhost:9090/dept/depts')
+           const {data: res} = await this.$http.get('/api/dept/depts')
            // console.log(res)
            if (!res.success) return this.$message.error('部门数据查询失败')
            this.deptList = res.obj
         },
         async showEditDialog(id) {
             console.log(id)
-            const {data: res} = await this.$http.get('http://localhost:9090/user/byId?id=' + id)
+            const {data: res} = await this.$http.get('/api/user/byId?id=' + id)
             if (!res.success) return this.$message.error('获取用户数据失败')
             // console.log(res)
             this.editForm = res.obj
@@ -262,7 +262,7 @@ export default {
         editUser() {
             this.$refs.editFormRef.validate(async valid => {
                 if (!valid) return
-                const {data: res} = await this.$http.post('http://localhost:9090/user/edit', this.editForm)
+                const {data: res} = await this.$http.post('/api/user/edit', this.editForm)
                 if (!res.success) return this.$message.error('修改失败')
                 this.editDialogVisible = false
                 this.getUserList()
@@ -284,24 +284,24 @@ export default {
                 // 用户点击了取消
                 return this.$message.info('已取消删除')
             }
-            const {data: res} = await this.$http.get('http://localhost:9090/user/deleteById?id=' + id)
+            const {data: res} = await this.$http.get('/api/user/deleteById?id=' + id)
             if (!res.success) return this.$message('用户删除失败')
             this.$message.success('删除用户成功')
             this.getUserList()
         },
         async getRoleList() {
-            const {data: res} = await this.$http.get('http://localhost:9090/role/roleList')
+            const {data: res} = await this.$http.get('/api/role/roleList')
             if (!res.success) return this.$message.error('获取角色列表失败')
             this.roleList = res.obj
         },
         async showRoleDialog(username) {
-            const {data: res} = await this.$http.get('http://localhost:9090/user/selectUserRoleByUsername?username=' + username)
+            const {data: res} = await this.$http.get('/api/user/selectUserRoleByUsername?username=' + username)
             if (!res.success) return this.$message.error('查询失败')
             this.roleForm = res.obj
             this.roleDialogVisible = true
         },
         async updateUserRole() {
-            const {data: res} = await this.$http.post('http://localhost:9090/user/updateUserRole', this.roleForm)
+            const {data: res} = await this.$http.post('/api/user/updateUserRole', this.roleForm)
             if (!res.success) return this.$message.error('分配失败')
             this.$message.success('修改成功')
             this.roleDialogVisible = false
