@@ -30,7 +30,7 @@
                     <template slot-scope="scope">
                         <!-- 详情按钮 -->
                         <el-button type="primary" icon="el-icon-view" size="mini" @click="showKnowledgeDialog(scope.row.id)"></el-button>
-                        <el-button type="warning" icon="el-icon-view" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
+                        <el-button type="warning" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
                         <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteMyKnowledge(scope.row.id)"></el-button>
                     </template>
                 </el-table-column>
@@ -58,15 +58,54 @@
         <div class="content-bottom-action">
             <div>
                 <span class="content-bottom-item">
-                    <i class="el-icon-chat-dot-round">{{ knowledgeDetail.commentCount }}</i>
+                    <i class="el-icon-chat-dot-round" :scale="2">{{ knowledgeDetail.commentCount }}</i>
                 </span>
                 <span class="content-bottom-item">
-                    <i class="el-icon-star-off">{{ knowledgeDetail.collectCount }}</i>
+                    <i class="el-icon-star-off" @click="collect">{{ knowledgeDetail.collectCount }}</i>
                 </span>
             </div>
         </div>
-        <div class="comment-text">
-            全部评论
+        <div class="add-comment">
+            <el-input
+                type="textarea"
+                :autosize="{ minRows: 2, maxRows: 4}"
+                placeholder="在这里输入你的评论吧！"
+                v-model="comment.content" class="comment-input">
+            </el-input>
+            <el-button type="success" class="add-button" @click="addComment(knowledgeDetail.id)">评论</el-button>
+        </div>
+        <div>
+            <div class="comment-text">
+                全部评论({{ knowledgeDetail.commentCount }})
+            </div>
+            <div class="comment-box" v-for="item in knowledgeDetail.commentList" :key="item.id">
+                <div class="user-box">
+                    <div class="user-realname">{{ item.username }}</div>
+                    <div class="user-deptname">{{ item.deptName }}</div>
+                </div>
+                <div class="content-box">
+                    <div class="text-box">
+                        <span>{{ item.content }}</span>
+                    </div>
+                </div>
+                <div class="foot-box">
+                    <i class="el-icon-chat-dot-square" @click="showReplyInput(item)">回复</i>
+                    <span style="color: rgba(187,187,187);">&nbsp;&nbsp;&nbsp;&nbsp;发布于：{{ item.createTime }}</span>
+                </div>
+                <div class="reply-box" v-for="item1 in item.replyList" :key="item1.id">
+                    <div style="margin-top: 10px;margin-bottom: 10px;">{{ item1.username }}：@{{ item1.targetUser }} {{ item1.content }}</div>
+                    <i class="el-icon-chat-dot-square" @click="showReplyInput(item1)">回复</i>
+                    <span style="font-size: small;color: rgba(187,187,187);margin-top: 10px;">&nbsp;&nbsp;&nbsp;&nbsp;{{ item1.createTime }}</span>
+                </div>
+            </div>
+            <!-- <div class="reply-area" :id="item.id" style="display: none;">
+                    <el-input v-model="reply.content" :placeholder="replyArea"></el-input>
+                    <el-button type="success" size="mini" round>发送</el-button>
+            </div> -->
+            <div class="reply-area" id="111" style="display: none;">
+                    <el-input v-model="reply.content" :placeholder="'回复@' + replyArea.username"></el-input>
+                    <el-button type="success" size="mini" round @click="addReply()">发送</el-button>
+            </div>
         </div>
         </el-dialog>
         <!-- 编辑知识对话框 -->
@@ -111,18 +150,28 @@ export default {
             knowledgeDetail: {},
             editDialogVisible: false,
             editForm: {},
-            getStatus: [
-                { dictValue: 0, dictLable: '审核未通过' },
-                { dictValue: 1, dictLable: '审核中' },
-                { dictValue: 2, dictLable: '等待人工审核' },
-                { dictValue: 3, dictLable: '审核通过' }
-            ],
             Status: [
                 '审核未通过',
                 '审核中',
                 '等待人工审核',
-                '审核通过'
-            ]
+                '审核通过',
+                '待修改'
+            ],
+            comment: {
+                content: '',
+                entityType: '',
+                entityId: '',
+                targetId: ''
+            },
+            reply: {
+                content: '',
+                entityType: '',
+                entityId: '',
+                targetId: ''
+            },
+            replyWord: '回复',
+            replyArea: {},
+            nowKnowledgeId: ''
         }
     },
     created() {
@@ -148,6 +197,7 @@ export default {
             this.getMyKnowledgeList()
         },
         async showKnowledgeDialog(id) {
+            this.nowKnowledgeId = id
             const {data: res} = await this.$http.get('/api/knowledge/selectById?id=' + id)
             this.knowledgeDetail = res.obj
             this.knowledgeDialogVisible = true
@@ -183,11 +233,54 @@ export default {
         },
         editDialogClosed() {
         },
-        getLabel(list, id, value, label) {
-            if (id !== '' && Array.isArray(list) && list.length !== 0) {
-                return !list.find(item => item[value] === id) ? id : list.find(item => item[value] === id)[label]
+        async collect(id) {
+            const {data: res} = await this.$http.post('/api/knowledge/collect', this.knowledgeDetail)
+            if (!res.success) return this.$message.error('操作失败')
+            this.showKnowledgeDialog(this.knowledgeDetail.id)
+        },
+        async addComment(id) {
+            this.comment.entityId = id
+            this.comment.entityType = 1
+            this.comment.targetId = this.knowledgeDetail.userId
+            const {data: res} = await this.$http.post(`/api/comment/add/${id}`, this.comment)
+            if (!res.success) return this.$message.error('评论失败')
+            this.showKnowledgeDialog(id)
+            this.comment.content = ''
+            return this.$message.success('操作成功')
+        },
+        async addReply() {
+            this.reply.targetId = this.replyArea.userId
+            if (this.replyArea.entityType === 1) {
+                this.reply.entityId = this.replyArea.id
             } else {
-                return id
+                this.reply.entityId = this.replyArea.entityId
+            }
+            this.reply.entityType = 2
+            const {data: res} = await this.$http.post(`/api/comment/add/${this.replyArea.entityId}`, this.reply)
+            if (!res.success) return this.$message.error('回复失败')
+            this.showKnowledgeDialog(this.nowKnowledgeId)
+            this.reply.content = ''
+            return this.$message.success('操作成功')
+        },
+        // showReplyInput(username) {
+            // if (document.getElementById('111').style.display !== 'none') {
+            //     document.getElementById('111').style.display = 'none'
+            //     this.replyArea = '回复@' + username
+            // } else {
+            //     document.getElementById('111').style.display = ''
+            //     this.replyArea = '回复@' + username
+            // }
+        // }
+        showReplyInput(item) {
+            if (document.getElementById('111').style.display === 'none') {
+                document.getElementById('111').style.display = ''
+                this.replyArea = item
+                // console.log(this.replyArea)
+                // this.replyArea = '回复@' + item.username
+            } else {
+                this.replyArea = item
+                // console.log(this.replyArea)
+                // this.replyArea = '回复@' + item.username
             }
         }
     }
@@ -257,5 +350,70 @@ export default {
     line-height: 18px;
     margin-bottom: 4px;
     margin-top: 20px;
+}
+.el-icon-chat-dot-round {
+  font-size: 17px;
+}
+.el-icon-star-off{
+    font-size: 17px;
+}
+.add-comment{
+    padding-bottom: 16px;
+    padding-top: 16px;
+    background-color: rgba(248,248,248);
+    padding-right: 20px;
+    padding-left: 20px;
+}
+.add-button{
+    display:      block;
+    margin-left:  auto;
+    margin-right: 0;
+    margin-top: 10px;
+}
+.comment-box{
+    padding-left: 12px;
+    padding-top: 16px;
+    border-bottom: 1px solid #f8f8f8;
+}
+.user-box{
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+}
+.user-realname {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    height: 16px;
+}
+.user-deptname{
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    height: 12px;
+    margin-top: 8px;
+    color: rgba(187,187,187);
+    font-size: 12px;
+}
+.content-box{
+    padding-top: 10px;
+    // margin-left: 40px;
+}
+.text-box{
+    color: rgba(34,34,34);
+    font-size: 14px;
+    line-height: 21px;
+    word-break: break-all;
+}
+.foot-box{
+    margin-top: 12px;
+}
+.reply-area{
+    display: flex;
+}
+.reply-box{
+    background-color: #f8f8f8;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 </style>
