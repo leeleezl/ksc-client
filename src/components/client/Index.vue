@@ -4,7 +4,6 @@
         <el-header class="header">
             <div>
                 <img src="../../assets/logo.png" alt="">
-                <span>知识库系统</span>
             </div>
             <el-button type="info" @click="logout">退出</el-button>
         </el-header>
@@ -97,6 +96,12 @@ export default {
         justify-content: space-between;
         span {
             margin-left: 15px;
+        }
+        img {
+            width: 12%;
+            height: 12%;
+            border-radius: 50%;
+            background-color: rgb(246, 249, 254);
         }
     }
 }

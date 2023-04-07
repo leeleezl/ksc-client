@@ -343,7 +343,7 @@ export default {
             } else {
                 this.replyArea = item
                 window.scrollTo(0, 50000)
-                console.log(this.replyArea)
+                // console.log(this.replyArea)
                 // this.replyArea = '回复@' + item.username
             }
         }
