@@ -151,11 +151,12 @@ export default {
             editDialogVisible: false,
             editForm: {},
             Status: [
-                '审核未通过',
+                '下架',
                 '审核中',
                 '等待人工审核',
                 '审核通过',
-                '待修改'
+                '上架',
+                '审核未通过'
             ],
             comment: {
                 content: '',
